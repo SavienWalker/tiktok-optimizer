@@ -24,6 +24,7 @@ const els = {
   resultVideo: document.getElementById("result-video"),
   sizeOriginal: document.getElementById("size-original"),
   sizeOptimized: document.getElementById("size-optimized"),
+  sizeWarning: document.getElementById("size-warning"),
   downloadLink: document.getElementById("download-link"),
   errorPanel: document.getElementById("error-panel"),
   errorMessage: document.getElementById("error-message"),
@@ -185,6 +186,8 @@ async function encode() {
       "-profile:v", "high",
       "-level", "4.2",
       "-crf", crf,
+      "-maxrate", "12M",
+      "-bufsize", "16M",
       "-preset", "slow",
       "-pix_fmt", "yuv420p",
       "-colorspace", "bt709",
@@ -207,6 +210,12 @@ async function encode() {
     els.sizeOriginal.textContent = formatBytes(selectedFile.size);
     els.sizeOptimized.textContent = formatBytes(blob.size);
     els.resultPanel.hidden = false;
+
+    if (blob.size > selectedFile.size * 3) {
+      els.sizeWarning.hidden = false;
+    } else {
+      els.sizeWarning.hidden = true;
+    }
 
     await engine.deleteFile(inputName);
     await engine.deleteFile(outputName);

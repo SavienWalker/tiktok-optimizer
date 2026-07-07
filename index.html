@@ -68,9 +68,9 @@
       <summary>Gelişmiş Ayarlar</summary>
       <div class="advanced-body">
         <div class="field">
-          <label for="crf-range">Kalite (CRF): <span id="crf-value">18</span></label>
-          <input type="range" id="crf-range" min="14" max="28" step="1" value="18" />
-          <p class="field-hint">Düşük değer = daha yüksek kalite, daha büyük dosya. Varsayılan 18 önerilir.</p>
+          <label for="crf-range">Kalite (CRF): <span id="crf-value">20</span></label>
+          <input type="range" id="crf-range" min="16" max="28" step="1" value="20" />
+          <p class="field-hint">Düşük = daha kaliteli ama daha büyük dosya.</p>
         </div>
         <div class="field">
           <label for="resolution-select">Çözünürlük</label>
@@ -112,6 +112,7 @@
         <span id="size-optimized" class="compare-value accent">—</span>
       </div>
     </div>
+    <p id="size-warning" class="size-warning" hidden>Dosya büyük çıktı, CRF değerini artırmayı deneyin.</p>
     <a id="download-link" class="btn btn-accent btn-large" download="netlik-optimized.mp4">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M12 4V16M12 16L7 11M12 16L17 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
