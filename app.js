@@ -16,6 +16,7 @@ const els = {
   crfRange: document.getElementById("crf-range"),
   crfValue: document.getElementById("crf-value"),
   resolutionSelect: document.getElementById("resolution-select"),
+  cropToggle: document.getElementById("crop-toggle"),
   progressWrap: document.getElementById("progress-wrap"),
   progressFill: document.getElementById("progress-fill"),
   progressLabel: document.getElementById("progress-label"),
@@ -33,6 +34,7 @@ const els = {
 let selectedFile = null;
 let ffmpeg = null;
 let ffmpegLoaded = false;
+let lastCropMatch = null;
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -134,6 +136,10 @@ async function ensureFfmpeg() {
     const pct = Math.min(100, Math.max(0, progress * 100));
     setProgress(pct, "Encode ediliyor…");
   });
+  ffmpeg.on("log", ({ message }) => {
+    const match = message.match(/crop=(\d+):(\d+):(\d+):(\d+)/);
+    if (match) lastCropMatch = match[0];
+  });
   setProgress(0, "Motor yükleniyor…");
 
   // @ffmpeg/ffmpeg's UMD build forces {type: "module"} whenever classWorkerURL
@@ -160,6 +166,18 @@ async function ensureFfmpeg() {
   return ffmpeg;
 }
 
+async function detectCrop(engine, inputName) {
+  lastCropMatch = null;
+  await engine.exec([
+    "-i", inputName,
+    "-t", "3",
+    "-vf", "cropdetect=64:2:0",
+    "-f", "null",
+    "-",
+  ]);
+  return lastCropMatch;
+}
+
 async function encode() {
   if (!selectedFile) return;
   hideError();
@@ -178,10 +196,17 @@ async function encode() {
 
     await engine.writeFile(inputName, await fetchFile(selectedFile));
 
+    let cropFilter = "";
+    if (els.cropToggle.checked) {
+      setProgress(0, "Kenarlar taranıyor…");
+      const crop = await detectCrop(engine, inputName);
+      if (crop) cropFilter = `${crop},`;
+    }
+
     setProgress(0, "Encode ediliyor…");
     await engine.exec([
       "-i", inputName,
-      "-vf", `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1`,
+      "-vf", `${cropFilter}scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1`,
       "-c:v", "libx264",
       "-profile:v", "high",
       "-level", "4.2",
