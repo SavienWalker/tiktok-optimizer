@@ -206,14 +206,20 @@ async function encode() {
       if (crop) cropFilter = `${crop},`;
     }
 
-    // Normalize non-square SAR into pixel dimensions first (setsar=1), then
-    // cap the long edge, keeping the source's native aspect ratio. No forced
-    // canvas, no padding — a 1:1 SAR mismatch was previously squashing
-    // anamorphic sources.
+    // Normalize non-square SAR into pixel dimensions first (setsar=1). Then
+    // cap short/long edges with a single uniform scale factor so aspect is
+    // never touched: shortCap protects the short edge from being shrunk
+    // past 1080 (a plain long-edge cap was previously over-shrinking tall
+    // portrait sources), longCap only kicks in when it doesn't force the
+    // short edge under that floor — whichever constraint is less
+    // aggressive wins, so neither edge is sacrificed for the other.
+    const shortCap = Math.min(1080, Number(maxSide));
+    const longCap = Number(maxSide);
+    const scaleExpr = `max(min(1,${shortCap}/min(iw,ih)),min(1,${longCap}/max(iw,ih)))`;
     const vf =
       `${cropFilter}` +
       `scale='trunc(iw*sar/2)*2:trunc(ih/2)*2',setsar=1,` +
-      `scale='if(gt(iw,ih),min(${maxSide},iw),-2)':'if(gt(iw,ih),-2,min(${maxSide},ih))'`;
+      `scale='trunc(iw*${scaleExpr}/2)*2':'trunc(ih*${scaleExpr}/2)*2',setsar=1`;
 
     setProgress(0, "Encode ediliyor…");
     await engine.exec([
