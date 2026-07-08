@@ -35,6 +35,7 @@ let selectedFile = null;
 let ffmpeg = null;
 let ffmpegLoaded = false;
 let lastCropMatch = null;
+let lastSarInfo = null;
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -137,8 +138,10 @@ async function ensureFfmpeg() {
     setProgress(pct, "Encode ediliyor…");
   });
   ffmpeg.on("log", ({ message }) => {
-    const match = message.match(/crop=(\d+):(\d+):(\d+):(\d+)/);
-    if (match) lastCropMatch = match[0];
+    const cropMatch = message.match(/crop=(\d+):(\d+):(\d+):(\d+)/);
+    if (cropMatch) lastCropMatch = cropMatch[0];
+    const sarMatch = message.match(/SAR \d+:\d+ DAR \d+:\d+/);
+    if (sarMatch) lastSarInfo = sarMatch[0];
   });
   setProgress(0, "Motor yükleniyor…");
 
@@ -188,7 +191,7 @@ async function encode() {
 
   try {
     const engine = await ensureFfmpeg();
-    const [w, h] = els.resolutionSelect.value.split("x");
+    const maxSide = els.resolutionSelect.value;
     const crf = els.crfRange.value;
 
     const inputName = "input" + (selectedFile.name.match(/\.\w+$/)?.[0] || ".mp4");
@@ -203,10 +206,19 @@ async function encode() {
       if (crop) cropFilter = `${crop},`;
     }
 
+    // Normalize non-square SAR into pixel dimensions first (setsar=1), then
+    // cap the long edge, keeping the source's native aspect ratio. No forced
+    // canvas, no padding — a 1:1 SAR mismatch was previously squashing
+    // anamorphic sources.
+    const vf =
+      `${cropFilter}` +
+      `scale='trunc(iw*sar/2)*2:trunc(ih/2)*2',setsar=1,` +
+      `scale='if(gt(iw,ih),min(${maxSide},iw),-2)':'if(gt(iw,ih),-2,min(${maxSide},ih))'`;
+
     setProgress(0, "Encode ediliyor…");
     await engine.exec([
       "-i", inputName,
-      "-vf", `${cropFilter}scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1`,
+      "-vf", vf,
       "-c:v", "libx264",
       "-profile:v", "high",
       "-level", "4.2",
@@ -225,6 +237,15 @@ async function encode() {
     ]);
 
     setProgress(100, "Tamamlandı");
+
+    lastSarInfo = null;
+    try {
+      await engine.exec(["-i", outputName]);
+    } catch {
+      // ffmpeg exits non-zero here since no real output is given to this
+      // probe call; the stream info (incl. SAR/DAR) is already logged by then.
+    }
+    console.log("Çıktı SAR/DAR:", lastSarInfo || "tespit edilemedi");
 
     const data = await engine.readFile(outputName);
     const blob = new Blob([data.buffer], { type: "video/mp4" });

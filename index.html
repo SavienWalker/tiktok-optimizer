@@ -73,12 +73,13 @@
           <p class="field-hint">Düşük = daha kaliteli ama daha büyük dosya.</p>
         </div>
         <div class="field">
-          <label for="resolution-select">Çözünürlük</label>
+          <label for="resolution-select">Maks. çözünürlük (uzun kenar)</label>
           <select id="resolution-select">
-            <option value="1080x1920" selected>1080 × 1920 (Önerilen)</option>
-            <option value="720x1280">720 × 1280</option>
-            <option value="540x960">540 × 960</option>
+            <option value="1920" selected>1920px (Önerilen)</option>
+            <option value="1280">1280px</option>
+            <option value="960">960px</option>
           </select>
+          <p class="field-hint">Kaynağın en-boy oranı korunur, siyah bar veya kırpma eklenmez; sadece bu sınırı aşan videolar küçültülür.</p>
         </div>
         <div class="field field-checkbox">
           <label class="checkbox-label">
