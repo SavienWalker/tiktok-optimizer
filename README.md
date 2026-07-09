@@ -12,7 +12,6 @@ ile cihazının içinde çalışır.
 **Canlı demo:** https://tiktok-optimizer.pages.dev
 
 ![Netlik arayüz](screenshot.png)
-*(Ekran görüntüsü henüz eklenmedi — repo köküne `screenshot.png` eklenmesi gerekiyor.)*
 
 ## Özellikler
 
@@ -21,6 +20,8 @@ ile cihazının içinde çalışır.
 - Önizleme + indirme + orijinal/optimize boyut karşılaştırması
 - Gelişmiş panel: CRF (kalite), maks. çözünürlük ve otomatik kenar kırpma ayarlanabilir
 - Build step yok — tek klasör, doğrudan statik hosting'e yüklenebilir
+
+![Encode ekranı](screenshot-tool.png)
 
 ## Varsayılan encode ayarları
 
