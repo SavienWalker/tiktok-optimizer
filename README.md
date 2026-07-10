@@ -11,6 +11,8 @@ ile cihazının içinde çalışır.
 
 **Canlı demo:** https://tiktok-optimizer.pages.dev
 
+![Video seç, tarayıcıda optimize et, indir](demo.gif)
+
 ![Netlik arayüz](screenshot.png)
 
 ## Özellikler
